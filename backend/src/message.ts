@@ -1,6 +1,6 @@
 
-export const INIT_MESSAGE = 'init_game';
-export const MOVE_MESSAGE = 'move_piece';
+export const INIT_GAME = 'init_game';
+export const MOVE_MESSAGE = 'move';
 export const GAME_OVER_MESSAGE = 'game_over';
 export const CHAT_MESSAGE = 'chat_message';
 // colors

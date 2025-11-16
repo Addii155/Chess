@@ -1,5 +1,5 @@
 import {WebSocket} from "ws";
-import { INIT_MESSAGE, MOVE_MESSAGE } from "./message.js";
+import { INIT_GAME, MOVE_MESSAGE } from "./message.js";
 import { Game } from "./Game.js";
 
 
@@ -26,31 +26,38 @@ export class GameManager {
     private addhandler(socket:WebSocket)
     {
         socket.on('message', (data)=>{
-            const message = JSON.parse(data.toString());
-            switch(message.type)
-            {
-                case INIT_MESSAGE:
-                    if(this.waitingUser)
-                    {
-                        const newGame = new Game(this.waitingUser, socket);
-                        this.game.push(newGame);
-                        this.waitingUser = null;
-                    }
-                    else {
-                        this.waitingUser = socket;
-                    }
-                    break;
-                case MOVE_MESSAGE:
-                    const game = this.game.find((g) => g.player1 ===socket || g.player2 === socket)
-                    if(game)
-                    {
-                        game.makeMove(socket, message.move: {
-                            from: string,
-                            to: string
-                        } )
-    
-                    }
+            try {
+                const message = JSON.parse(data.toString());
+                switch(message.type)
+                {
+                    case INIT_GAME:
+                        if(this.waitingUser)
+                        {
+                            console.log("Starting new game");
+                            const newGame = new Game(this.waitingUser, socket);
+                            this.game.push(newGame);
+                            console.log("New game started between two players");    
+                            this.waitingUser = null;
+                        }
+                        else {
+                            console.log("Waiting for an opponent...");
+                            this.waitingUser = socket;
+                        }
+                        break;
+                    case MOVE_MESSAGE:
+                        const game = this.game.find((g) => g.player1 ===socket || g.player2 === socket)
+                        if(game)
+                        {
+                            game.makeMove(socket, message.move as {
+                                from: string,
+                                to: string
+                            } )
+        
+                        }
 
+                }
+            } catch (error: any) {
+                console.error("[GameManager] Error parsing message:", error);
             }
         })
     }

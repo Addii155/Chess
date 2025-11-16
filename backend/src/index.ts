@@ -7,11 +7,19 @@ const gameManager = new GameManager();
 
 wss.on('connection', function connection(ws) {
     gameManager.addUser(ws);
-  ws.on('error', console.error);
+    
+    ws.on('error', (error) => {
+        console.error("[Server] WebSocket error:", error);
+    });
 
-  ws.on('message', function message(data) {
-    console.log('received: %s', data);
-  });
+    ws.on('close', () => {
+        console.log("[Server] Client disconnected");
+        gameManager.removeUser(ws);
+    });
 
-  ws.send('something');
+    ws.on('message', function message(data) {
+        console.log('[Server] received: %s', data);
+    });
+
+    ws.send('something');
 });
