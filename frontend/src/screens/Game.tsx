@@ -1,87 +1,87 @@
 import { useEffect, useState } from "react";
 import { useWebSocket } from "../hooks/webserver";
 import { Chess } from "chess.js";
+import Chessboard from "../components/Chessboard";
 
 export const INIT_GAME = "init_game";
 export const MOVE = "move";
+export const MOVE_MADE = "move_made";
 export const GAME_OVER = "game_over";
 
 const Game = () => {
     const socket = useWebSocket();
     const [chess, setChess] = useState(new Chess());
-    const [board, setBoard] = useState(chess.board());
+    const [board, setBoard] = useState(normalizeBoard(new Chess().board()));
+    const [Started, setStarted] = useState(false);
+    const [color, setColor] = useState<"w" | "b" | null>(null);
+
+    function normalizeBoard(b: any[][]) {
+        return b.map((row, r) =>
+            row.map((sq, c) => {
+                if (!sq) {
+                    const file = "abcdefgh"[c];
+                    const rank = 8 - r;
+                    return { square: `${file}${rank}`, type: null, color: null };
+                }
+                return sq;
+            })
+        );
+    }
 
     useEffect(() => {
         if (!socket) return;
 
         socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const msg = JSON.parse(event.data);
 
-            switch (message.type) {
+            switch (msg.type) {
                 case INIT_GAME:
-                    
-                    setBoard(chess.board());
+                    setStarted(true);
+                    setColor(msg.color);
+                    setBoard(normalizeBoard(chess.board()));
                     break;
 
-                case MOVE:
-                    console.log("Move received:", message.move);
-
-                    // create new Chess instance to trigger re-render
-                    setChess((prev) => {
-                        const newChess = new Chess(prev.fen());
-                        newChess.move(message.move);
-                        setBoard(newChess.board());
-                        return newChess;
-                    });
+                case MOVE_MADE:
+                    // backend sends updated fen
+                    const newChess = new Chess(msg.board);
+                    setChess(newChess);
+                    setBoard(normalizeBoard(newChess.board()));
                     break;
 
                 case GAME_OVER:
-                    console.log("Game Over:", message.result);
+                    console.log("Game Over:", msg.result);
                     break;
 
                 default:
                     break;
             }
         };
-    }, [socket]); // ❌ removed `chess` from dependency
-    if(!socket) return <div>Connecting to server...</div>;
+    }, [socket]);
+
+    if (!socket) return <div>Connecting to server...</div>;
+
     return (
         <div>
-            <div>
-                {board.map((row, rowIndex) => (
-                    <div key={rowIndex} style={{ display: "flex" }}>
-                        {row.map((square, colIndex) => (
-                            <div
-                                key={colIndex}
-                                style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    backgroundColor:
-                                        (rowIndex + colIndex) % 2 === 0
-                                            ? "white"
-                                            : "gray",
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    fontSize: "22px",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                {square ? square.type : ""}
-                            </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
-            <div>
-                <button className="" onClick={()=>{
-                    socket.send(JSON.stringify({
-                        type:"init_game"
-                    }))
-                }}>
-                    Play 
-                </button>
-            </div>
+            {Started ? (
+                <Chessboard
+                    board={board}
+                    chess={chess}
+                    socket={socket}
+                    color={color}
+                />
+            ) : (
+                <div>
+                    <div>Waiting for an opponent...</div>
+
+                    <button
+                        onClick={() =>
+                            socket.send(JSON.stringify({ type: INIT_GAME }))
+                        }
+                    >
+                        Play
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

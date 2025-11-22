@@ -1,91 +1,106 @@
-import type { Chess, Color, PieceSymbol, Square } from "chess.js";
+import type { Chess, Square, PieceSymbol, Color } from "chess.js";
 import { useState } from "react";
 import { MOVE } from "../screens/Game";
 
 type BoardSquare = {
-  square: Square;
-  type: PieceSymbol;
-  color: Color;
-} | null;
+    square: Square;
+    type: PieceSymbol | null;
+    color: Color | null;
+};
 
 const Chessboard = ({
-  board,
-  chess,
-  socket,
+    board,
+    chess,
+    socket,
+    color
 }: {
-  board: BoardSquare[][];
-  chess: Chess;
-  socket: WebSocket;
+    board: BoardSquare[][];
+    chess: Chess;
+    socket: WebSocket;
+    color: "w" | "b" | null;
 }) => {
-  const [from, setFrom] = useState<Square | null>(null);
+    const [from, setFrom] = useState<Square | null>(null);
+    const [legalMoves, setLegalMoves] = useState<Square[]>([]);
 
-  const handleClick = (square: BoardSquare) => {
-    if (!square) return;
+    const handleClick = (square: BoardSquare | null) => {
+        if (!square) return;
 
-    const sq = square.square;
+        const clicked = square.square;
 
-    if (!from) {
-      // First click → select FROM
-      setFrom(sq);
-      return;
-    }
+        // FIRST CLICK
+        if (!from) {
+            if (square.color !== color) return;
 
-    // Second click → TO
-    const move = { from, to: sq };
+            setFrom(clicked);
 
-    socket.send(
-      JSON.stringify({
-        type: MOVE,
-        move,
-      })
-    );
+            const moves = chess
+                .moves({ square: clicked, verbose: true })
+                .map((m) => m.to as Square);
 
-    setFrom(null);
-  };
+            setLegalMoves(moves);
+            return;
+        }
 
-  return (
-    <div>
-      {board.map((row, rowIndex) => (
-        <div key={rowIndex} style={{ display: "flex" }}>
-          {row.map((square, colIndex) => {
-            const background =
-              (rowIndex + colIndex) % 2 === 0 ? "beige" : "brown";
+        // SECOND CLICK → send to server
+        socket.send(
+            JSON.stringify({
+                type: MOVE,
+                move: { from, to: clicked }
+            })
+        );
 
-            return (
-              <div
-                key={colIndex}
-                onClick={() => square && handleClick(square)}
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  backgroundColor: background,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  fontSize: "32px",
-                  fontWeight: "bold",
-                  border:
-                    from === square?.square
-                      ? "3px solid yellow"
-                      : "1px solid black",
-                }}
-              >
-                {square?.type && (
-                  <div
-                    style={{
-                      color: square.color === "w" ? "white" : "black",
-                    }}
-                  >
-                    {square.type}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        setFrom(null);
+        setLegalMoves([]);
+    };
+
+    return (
+        <div>
+            {board.map((row, r) => (
+                <div key={r} style={{ display: "flex" }}>
+                    {row.map((sq, c) => {
+                        const squareName = sq?.square ?? null;
+                        const selected = squareName === from;
+                        const highlight = legalMoves.includes(squareName as Square);
+
+                        const background = selected
+                            ? "yellow"
+                            : highlight
+                            ? "lightgreen"
+                            : (r + c) % 2 === 0
+                            ? "beige"
+                            : "brown";
+
+                        return (
+                            <div
+                                key={c}
+                                onClick={() => handleClick(sq)}
+                                style={{
+                                    width: 50,
+                                    height: 50,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    backgroundColor: background
+                                }}
+                            >
+                                {sq?.type && (
+                                    <span
+                                        style={{
+                                            color: sq.color === "w" ? "white" : "black",
+                                            fontSize: 32,
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        {sq.type}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            ))}
         </div>
-      ))}
-    </div>
-  );
+    );
 };
 
 export default Chessboard;

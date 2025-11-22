@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { Chess } from "chess.js";
-import { INIT_GAME } from "./message.js";
+import { GAME_OVER_MESSAGE, INIT_GAME, INVALID_MOVE, INVALID_TURN, MOVE_MADE } from "./message.js";
 
 export class Game {
     public player1: WebSocket;
@@ -32,7 +32,7 @@ export class Game {
         if (!correctPlayer) {
             socket.send(
                 JSON.stringify({
-                    type: "invalid_turn",
+                    type: INVALID_TURN,
                     message: "It's not your turn!",
                 })
             );
@@ -46,7 +46,7 @@ export class Game {
             if (!result) {
                 socket.send(
                     JSON.stringify({
-                        type: "invalid_move",
+                        type: INVALID_MOVE,
                         message: "Illegal move",
                     })
                 );
@@ -58,16 +58,18 @@ export class Game {
             this.moves.push(result.san);
 
             const message = JSON.stringify({
-                type: "move_made",
+                type: MOVE_MADE,
                 move: result,
                 board: this.board.fen(),
+                state:this.board.ascii(),
+
             });
 
             this.player1.send(message);
             this.player2.send(message);
             if (this.board.isGameOver()) {
                 const resultMessage = JSON.stringify({
-                    type: "game_over",
+                    type: GAME_OVER_MESSAGE,
                     reason: this.getGameResult(),
                 });
 
@@ -85,6 +87,7 @@ export class Game {
             );
         }
         console.log(this.board.ascii())
+        console.log("FEN:", this.board.fen());
     }
 
     private getGameResult() {

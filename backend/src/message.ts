@@ -3,6 +3,10 @@ export const INIT_GAME = 'init_game';
 export const MOVE_MESSAGE = 'move';
 export const GAME_OVER_MESSAGE = 'game_over';
 export const CHAT_MESSAGE = 'chat_message';
+export const INVALID_TURN = 'invalid_turn';
+export const INVALID_MOVE = 'invalid_move';
+export const MOVE_MADE = 'move_made';
+
 // colors
 export const WHITE = 'w'
 export const BLACK = 'b'

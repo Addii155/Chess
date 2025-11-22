@@ -7,7 +7,6 @@ export class GameManager {
     private game : Game[];
     private User : WebSocket[];
     private waitingUser : WebSocket | null;
-    
     constructor()
     {
         this.game = [];
@@ -17,6 +16,7 @@ export class GameManager {
     public addUser(socket:WebSocket)
     {
         this.User.push(socket)
+        console.log("[GameManager] New user added. Total users:", this.User.length);
         this.addhandler(socket);
     }
     public removeUser(socket:WebSocket)
