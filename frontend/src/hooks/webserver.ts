@@ -4,6 +4,8 @@ export const URL = 'ws://localhost:8080/'
 
 export const useWebSocket = () => {
     const [socket, setsocket] = useState<WebSocket | null>(null)
+
+    
     useEffect(()=>{
         const ws = new WebSocket(URL);
         ws.onopen =()=>{

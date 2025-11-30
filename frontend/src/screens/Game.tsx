@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWebSocket } from "../hooks/webserver";
 import { Chess } from "chess.js";
+import type { Square, PieceSymbol, Color } from "chess.js";
 import Chessboard from "../components/Chessboard";
 
 export const INIT_GAME = "init_game";
@@ -12,16 +13,16 @@ const Game = () => {
     const socket = useWebSocket();
     const [chess, setChess] = useState(new Chess());
     const [board, setBoard] = useState(normalizeBoard(new Chess().board()));
-    const [Started, setStarted] = useState(false);
+    const [started, setStarted] = useState(false);
     const [color, setColor] = useState<"w" | "b" | null>(null);
 
-    function normalizeBoard(b: any[][]) {
+    function normalizeBoard(b: ({ square: Square; type: PieceSymbol; color: Color } | null)[][]) {
         return b.map((row, r) =>
             row.map((sq, c) => {
                 if (!sq) {
                     const file = "abcdefgh"[c];
                     const rank = 8 - r;
-                    return { square: `${file}${rank}`, type: null, color: null };
+                    return { square: `${file}${rank}` as Square, type: null, color: null };
                 }
                 return sq;
             })
@@ -56,13 +57,13 @@ const Game = () => {
                     break;
             }
         };
-    }, [socket]);
+    }, [socket, chess]);
 
     if (!socket) return <div>Connecting to server...</div>;
 
     return (
-        <div>
-            {Started ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
+            {started ? (
                 <Chessboard
                     board={board}
                     chess={chess}
@@ -70,13 +71,21 @@ const Game = () => {
                     color={color}
                 />
             ) : (
-                <div>
-                    <div>Waiting for an opponent...</div>
-
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ marginBottom: 20, fontSize: '1.2rem' }}>Waiting for an opponent...</div>
                     <button
                         onClick={() =>
                             socket.send(JSON.stringify({ type: INIT_GAME }))
                         }
+                        style={{
+                            padding: '10px 20px',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 5
+                        }}
                     >
                         Play
                     </button>

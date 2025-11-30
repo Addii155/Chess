@@ -16,10 +16,9 @@ export class Game {
         this.board = new Chess();
         this.moves = [];
         this.moveCounter = 0;
-
         // Send initial messages
-        player1.send(JSON.stringify({ type: INIT_GAME, color: "w" }));
-        player2.send(JSON.stringify({ type: INIT_GAME, color: "b" }));
+        this.player1.send(JSON.stringify({ type: INIT_GAME, color: "w" }));
+        this.player2.send(JSON.stringify({ type: INIT_GAME, color: "b" }));
     }
 
     public makeMove(socket: WebSocket, move: { from: string; to: string }) {
@@ -61,12 +60,12 @@ export class Game {
                 type: MOVE_MADE,
                 move: result,
                 board: this.board.fen(),
-                state:this.board.ascii(),
-
+                state: this.board.ascii(),
             });
 
             this.player1.send(message);
             this.player2.send(message);
+
             if (this.board.isGameOver()) {
                 const resultMessage = JSON.stringify({
                     type: GAME_OVER_MESSAGE,
@@ -86,8 +85,6 @@ export class Game {
                 })
             );
         }
-        console.log(this.board.ascii())
-        console.log("FEN:", this.board.fen());
     }
 
     private getGameResult() {
