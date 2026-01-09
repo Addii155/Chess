@@ -1,6 +1,6 @@
 import type { Chess, Square, PieceSymbol, Color } from "chess.js";
 import { useState, useEffect, useRef } from "react";
-import { MOVE } from "../screens/Game";
+import { MOVE } from "@/utils/move";
 
 type BoardSquare = {
     square: Square;

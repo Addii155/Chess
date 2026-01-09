@@ -1,8 +1,9 @@
+'use client';   
 import { useEffect, useState } from "react";
-import { useWebSocket } from "../hooks/webserver";
+import { useWebSocket } from "@/hooks/webserver"
 import { Chess } from "chess.js";
 import type { Square, PieceSymbol, Color } from "chess.js";
-import Chessboard from "../components/Chessboard";
+import Chessboard from "@/components/Chessboard";
 
 export const INIT_GAME = "init_game";
 export const MOVE = "move";

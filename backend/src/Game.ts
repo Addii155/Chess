@@ -16,7 +16,6 @@ export class Game {
         this.board = new Chess();
         this.moves = [];
         this.moveCounter = 0;
-        // Send initial messages
         this.player1.send(JSON.stringify({ type: INIT_GAME, color: "w" }));
         this.player2.send(JSON.stringify({ type: INIT_GAME, color: "b" }));
     }

@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  avatar      String?
+  rank        Int      @default(1200)
+  username    String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  whiteMatches Match[] @relation("WhitePlayer")
+  blackMatches Match[] @relation("BlackPlayer")
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  fen       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  match     Match?
+}
+
+model Match {
+  id        String      @id @default(cuid())
+  whiteId   String
+  blackId   String
+  gameId    String      @unique
+  result    MatchResult @default(ONGOING)
+
+  white     User @relation("WhitePlayer", fields: [whiteId], references: [id])
+  black     User @relation("BlackPlayer", fields: [blackId], references: [id])
+  game      Game @relation(fields: [gameId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([whiteId])
+  @@index([blackId])
+}
+
+enum MatchResult {
+  ONGOING
+  WHITE_WON
+  BLACK_WON
+  DRAW
+}
